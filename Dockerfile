@@ -1,6 +1,5 @@
-FROM python:3.10-slim
+FROM python:3.9
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
+COPY app/ /app/
+RUN pip install -r /app/requirements.txt
 CMD ["python", "app.py"]
