@@ -1,38 +1,38 @@
 pipeline {
     agent any
-
     environment {
-        IMAGE_NAME = "mamatha0124/flask-app"
-        IMAGE_TAG = "v${BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = credentials('98897e03-c137-4438-8da4-dd1f33b63fba')
+          KUBECONFIG = "/var/lib/jenkins/.minikube/profiles/minikube/config"// You must create this in Jenkins
+       
     }
-
     stages {
-        stage('Clone') {
+        stage('Clone Repository') {
             steps {
-                git 'https://github.com/Mamatha1206/k8s-pythonapp.git'
+                git branch: 'main', url: 'https://github.com/mamatha/k8s-pythonapp.git'
             }
         }
 
-        stage('Build Image') {
+        stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
-                }
+                sh 'docker build -t mamatha0124/flask-app:latest .'
             }
         }
 
-        stage('Push Image') {
+        stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'DOCKER_CREDENTIALS_ID', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-                }
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                sh 'docker push mamatha0124/flask-app:latest'
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh "kubectl set image deployment/flask-app flask-container=${IMAGE_NAME}:${IMAGE_TAG}"
+                withKubeConfig([credentialsId: 'kubeconfig']) {
+                    sh '''
+                        kubectl apply -f deployment.yaml
+                        kubectl apply -f service.yaml
+                    '''
+                }
             }
         }
     }
