@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/mamatha/k8s-pythonapp.git'
+                git branch: 'main', url: 'https://github.com/Mamatha1206/k8s-pythonapp.git'
             }
         }
 
